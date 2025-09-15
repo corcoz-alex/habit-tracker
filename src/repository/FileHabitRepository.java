@@ -1,4 +1,4 @@
-package repository;
+package repository.impl;
 
 import domain.Habit;
 import domain.HabitLogEntry;
@@ -26,7 +26,7 @@ public class FileHabitRepository implements HabitRepository {
     public void save(Map<UUID, Habit> habits, Map<UUID, List<HabitLogEntry>> logs) throws IOException {
         if (!Files.exists(dataDir)) Files.createDirectories(dataDir);
         try (var oos = new ObjectOutputStream(new BufferedOutputStream(Files.newOutputStream(filePath)))) {
-            oos.writeObject(new Snapshot(new LinkedHashMap<>(habits), new HashMap<>(logs)));
+            oos.writeObject(new Snapshot(new LinkedHashMap<>(habits), copyLogs(logs)));
         }
     }
 
@@ -47,5 +47,11 @@ public class FileHabitRepository implements HabitRepository {
         try (var ois = new ObjectInputStream(new BufferedInputStream(Files.newInputStream(filePath)))) {
             return (Snapshot) ois.readObject();
         }
+    }
+
+    private Map<UUID, List<HabitLogEntry>> copyLogs(Map<UUID, List<HabitLogEntry>> logs) {
+        Map<UUID, List<HabitLogEntry>> copy = new HashMap<>();
+        for (var e : logs.entrySet()) copy.put(e.getKey(), new ArrayList<>(e.getValue()));
+        return copy;
     }
 }
